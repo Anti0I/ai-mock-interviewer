@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Tabela Użytkownika
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  credits   Int      @default(2) // Użytkownik dostaje 2 darmowe rozmowy na start
+  createdAt DateTime @default(now())
+
+  // Relacja: Jeden użytkownik może mieć wiele rozmów
+  interviews Interview[]
+}
+
+// Tabela Rozmowy Rekrutacyjnej (Wywiadu)
+model Interview {
+  id        String   @id @default(uuid())
+  userId    String
+  jobTitle  String // np. "Frontend Developer"
+  status    String   @default("IN_PROGRESS") // "IN_PROGRESS" lub "COMPLETED"
+  feedback  String? // Tu AI wpisze podsumowanie na koniec rozmowy (znak ? oznacza, że pole jest opcjonalne)
+  createdAt DateTime @default(now())
+
+  // Połączenie wywiadu z konkretnym użytkownikiem
+  user     User      @relation(fields: [userId], references: [id])
+  // Relacja: Jeden wywiad składa się z wielu wiadomości
+  messages Message[]
+}
+
+// Tabela pojedynczej wiadomości w czacie
+model Message {
+  id          String   @id @default(uuid())
+  interviewId String
+  role        String // Tu zapiszemy kto pisze: "user" (kandydat) lub "ai" (rekruter)
+  content     String // Treść wiadomości
+  createdAt   DateTime @default(now())
+
+  // Połączenie wiadomości z konkretnym wywiadem
+  interview Interview @relation(fields: [interviewId], references: [id])
+}
