@@ -1,7 +1,9 @@
+import { HeroSection } from "./components/sections/HeroSection";
+
 export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <h1>AI Mock Interview</h1>
+      <HeroSection />
     </div>
   );
 }
