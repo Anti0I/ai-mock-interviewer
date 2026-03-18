@@ -14,12 +14,10 @@ export default function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    // Auto-scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Auto-resize textarea
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'inherit';
@@ -50,20 +48,17 @@ export default function ChatPage() {
                 .map((part: any) => part.text)
                 .join('');
         }
-        // Fallback dla bezpieczeństwa
         return m.text || m.content || '';
     };
 
     return (
         <div className="flex flex-col h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-            {/* Header */}
             <header className="border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 bg-white dark:bg-slate-950 z-10">
                 <div className="max-w-3xl mx-auto flex items-center gap-3">
                     <h1 className="font-semibold text-lg">Rozmowa Kwalifikacyjna</h1>
                 </div>
             </header>
 
-            {/* Chat Container */}
             <div className="flex-1 overflow-y-auto p-4">
                 <div className="max-w-3xl mx-auto space-y-6">
                     {messages.length === 0 ? (
@@ -86,7 +81,6 @@ export default function ChatPage() {
                         ))
                     )}
 
-                    {/* Loading Indicator */}
                     {isLoading && (
                         <div className="flex gap-3">
                             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
@@ -101,7 +95,6 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            {/* Input Area */}
             <div className="border-t border-slate-200 dark:border-slate-800 p-4 bg-white dark:bg-slate-950">
                 <div className="max-w-3xl mx-auto">
                     <form onSubmit={handleSubmit} className="flex gap-2 items-end">
