@@ -25,7 +25,7 @@ Automated SaaS application that provides interactive interview sessions. It mana
 
 ## AI Engine
 
-**Model:** `gemini-3-pro-preview`
+**Model:** `gemini-2.5-flash`
 **SDK:** Vercel AI SDK 6
 
 Acts as a professional technical recruiter. It handles real-time text streaming, dynamic context processing, and adapts its questions based on candidate responses. 
