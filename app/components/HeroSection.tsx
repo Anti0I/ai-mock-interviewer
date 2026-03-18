@@ -23,9 +23,9 @@ export function HeroSection() {
                         Jesteś zalogowany! Witamy w panelu.
                     </p>
                     <Link
-                        href="/dashboard"
+                        href="/chat"
                         className="bg-green-600 px-8 py-4 rounded-lg font-bold hover:bg-green-700">
-                        Przejdź do panelu →
+                        Przejdź do czatu →
                     </Link>
                 </div>
             </Show>
