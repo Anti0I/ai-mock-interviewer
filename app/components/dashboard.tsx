@@ -5,30 +5,24 @@ import Link from 'next/link';
 import { Plus, MessageSquare, Calendar, Wallet, ChevronRight } from 'lucide-react';
 
 export default async function Dashboard() {
-    // 1. Sprawdzamy sesję użytkownika
     const { userId } = await auth();
 
-    // Jeśli nie jest zalogowany, odsyłamy do logowania
     if (!userId) {
         redirect('/');
     }
 
-    // 2. Pobieramy dane użytkownika ORAZ wszystkie jego wywiady z bazy
     const user = await prisma.user.findUnique({
         where: { id: userId },
         include: {
             interviews: {
-                orderBy: { createdAt: 'desc' } // Sortujemy od najnowszego
+                orderBy: { createdAt: 'desc' }
             }
         }
     });
 
-    // Zabezpieczenie na wypadek opóźnienia webhooka Clerka
     if (!user) {
         return (
-            <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <p className="text-slate-500">Trwa konfiguracja Twojego profilu...</p>
-            </div>
+            <p>Trwa konfiguracja Twojego profilu...</p>
         );
     }
 
@@ -36,7 +30,6 @@ export default async function Dashboard() {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 md:p-12">
             <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* NAGŁÓWEK DASHBOARDU */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Twój Panel</h1>
@@ -44,13 +37,11 @@ export default async function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* Wskaźnik kredytów */}
                         <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-xl font-medium border border-blue-200 dark:border-blue-800">
                             <Wallet size={20} />
                             <span>Kredyty: {user.credits}</span>
                         </div>
 
-                        {/* Przycisk startu */}
                         <Link
                             href="/chat"
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors"
@@ -61,12 +52,10 @@ export default async function Dashboard() {
                     </div>
                 </header>
 
-                {/* LISTA WYWIADÓW */}
                 <div>
                     <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Historia rozmów</h2>
 
                     {user.interviews.length === 0 ? (
-                        /* Pusty stan, gdy nie ma jeszcze żadnych wywiadów */
                         <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center">
                             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <MessageSquare size={32} />
@@ -77,7 +66,6 @@ export default async function Dashboard() {
                             </p>
                         </div>
                     ) : (
-                        /* Siatka wywiadów */
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {user.interviews.map((interview) => (
                                 <Link
@@ -100,8 +88,11 @@ export default async function Dashboard() {
                                             </div>
                                         </div>
 
-                                        {/* Status / Werdykt wyciągnięty z feedbacku */}
-                                        {interview.feedback?.includes('[ZATRUDNIONY]') ? (
+                                        {interview.status === 'IN_PROGRESS' ? (
+                                            <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-3 py-1 rounded-lg text-sm font-bold">
+                                                W TRAKCIE
+                                            </span>
+                                        ) : interview.feedback?.includes('[ZATRUDNIONY]') ? (
                                             <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg text-sm font-bold">
                                                 ZATRUDNIONY
                                             </span>
@@ -116,12 +107,14 @@ export default async function Dashboard() {
                                         )}
                                     </div>
 
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-3 mb-4">
-                                        {interview.feedback || "Brak podsumowania od rekrutera."}
+                                    <p className="text-sm">
+                                        {interview.status === 'IN_PROGRESS'
+                                            ? "Rozmowa nie została ukończona."
+                                            : (interview.feedback || "Brak podsumowania od rekrutera.")}
                                     </p>
 
                                     <span className="text-blue-600 dark:text-blue-400 font-medium text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                                        Zobacz szczegóły <ChevronRight size={16} />
+                                        Zobacz szczegóły
                                     </span>
                                 </Link>
                             ))}

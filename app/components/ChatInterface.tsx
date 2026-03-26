@@ -14,6 +14,7 @@ export default function ChatPage() {
     const isLoading = status === 'submitted' || status === 'streaming';
     const [input, setInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [interviewId, setInterviewId] = useState<string | null>(null);
     const [isInterviewFinished, setIsInterviewFinished] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,9 +69,30 @@ export default function ChatPage() {
 
         checkCredits();
     }, []);
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading || isInterviewFinished) return;
+
+        // Przy pierwszej wiadomości: pobierz kredyt i utwórz wywiad
+        if (!interviewId) {
+            try {
+                const res = await fetch('/api/interview/start', { method: 'POST' });
+                if (!res.ok) {
+                    if (res.status === 403) {
+                        setHasCredits(false);
+                        return;
+                    }
+                    throw new Error('Nie udało się rozpocząć wywiadu');
+                }
+                const data = await res.json();
+                setInterviewId(data.interviewId);
+            } catch (error) {
+                console.error(error);
+                alert('Błąd przy rozpoczynaniu wywiadu.');
+                return;
+            }
+        }
+
         sendMessage({ text: input });
         setInput('');
         if (textareaRef.current) {
@@ -87,12 +109,12 @@ export default function ChatPage() {
     const saveInterview = async () => {
         setIsSaving(true);
         try {
-            const response = await fetch('/api/interview/save', {
+            const response = await fetch('/api/interviews/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    interviewId: interviewId,
                     messages: messages,
-                    jobTitle: "Rozmowa - AI Mock Interview"
                 })
             });
 
@@ -193,9 +215,9 @@ export default function ChatPage() {
                                 className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
                             >
                                 {isSaving ? (
-                                    <><Loader2 className="w-5 h-5 animate-spin" /> Zapisywanie w Supabase...</>
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Zapisywanie...</>
                                 ) : (
-                                    "Zapisz wynik i zakończ (Pobiera 1 kredyt)"
+                                    "Zapisz wynik i zakończ"
                                 )}
                             </button>
                         </div>

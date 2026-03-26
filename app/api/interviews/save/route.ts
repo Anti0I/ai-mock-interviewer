@@ -10,46 +10,40 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { messages, jobTitle = "Rozmowa Techniczna" } = body;
+        const { interviewId, messages } = body;
+
+        if (!interviewId) {
+            return new NextResponse("Brak interviewId", { status: 400 });
+        }
+
+        const interview = await prisma.interview.findUnique({
+            where: { id: interviewId }
+        });
+
+        if (!interview || interview.userId !== userId) {
+            return new NextResponse("Nie znaleziono wywiadu", { status: 404 });
+        }
 
         const lastMessage = messages[messages.length - 1];
         const feedbackText = lastMessage?.role === 'assistant'
             ? (lastMessage.content || lastMessage.parts?.[0]?.text || "Brak podsumowania")
             : null;
 
-        const user = await prisma.user.findUnique({
-            where: { id: userId }
-        });
-
-        if (!user || user.credits <= 0) {
-            return new NextResponse("Brak wystarczających kredytów", { status: 403 });
-        }
-
-        const interview = await prisma.$transaction(async (tx) => {
-
-            await tx.user.update({
-                where: { id: userId },
-                data: { credits: { decrement: 1 } }
-            });
-
-            return await tx.interview.create({
-                data: {
-                    userId: userId,
-                    jobTitle: jobTitle,
-                    status: "COMPLETED",
-                    feedback: feedbackText,
-
-                    messages: {
-                        create: messages.map((m: any) => ({
-                            role: m.role === 'user' ? 'user' : 'ai',
-                            content: m.content || m.parts?.map((p: any) => p.text).join('') || '',
-                        }))
-                    }
+        const updated = await prisma.interview.update({
+            where: { id: interviewId },
+            data: {
+                status: "COMPLETED",
+                feedback: feedbackText,
+                messages: {
+                    create: messages.map((m: any) => ({
+                        role: m.role === 'user' ? 'user' : 'ai',
+                        content: m.content || m.parts?.map((p: any) => p.text).join('') || '',
+                    }))
                 }
-            });
+            }
         });
 
-        return NextResponse.json(interview);
+        return NextResponse.json(updated);
 
     } catch (error) {
         console.error("Błąd podczas zapisu wywiadu:", error);

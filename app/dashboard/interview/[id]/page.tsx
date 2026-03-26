@@ -63,10 +63,10 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                 <div className="border-b border-slate-200 dark:border-slate-800">
                     <div className="max-w-3xl mx-auto p-4">
                         <div className={`p-5 rounded-2xl border ${isHired
-                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                : isRejected
-                                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                            : isRejected
+                                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                             }`}>
                             <div className="flex items-center gap-3 mb-3">
                                 {isHired ? (
@@ -102,25 +102,40 @@ export default async function InterviewDetailPage({ params }: PageProps) {
 
             <div className="p-4 pb-12">
                 <div className="max-w-3xl mx-auto space-y-6">
-                    {interview.messages.map((m) => (
-                        <div key={m.id} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                {m.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-                            </div>
-                            <div className={`max-w-[80%] px-4 py-2 rounded-lg ${m.role === 'user'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
-                                }`}>
-                                <p className="whitespace-pre-wrap">{m.content}</p>
-                            </div>
-                        </div>
-                    ))}
+                    {interview.messages.length === 0 ? (
+                        <div className="text-center py-16">
 
-                    <div className="text-center py-8">
-                        <p className="text-sm text-slate-400">
-                            — Koniec transkryptu —
-                        </p>
-                    </div>
+
+                            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                                Rozmowa nie została ukończona
+                            </h3>
+                            <p className="text-slate-500 max-w-sm mx-auto">
+                                Ta rozmowa została przerwana przed zakończeniem. Historia wiadomości nie została zapisana.
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            {interview.messages.map((m) => (
+                                <div key={m.id} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                        {m.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+                                    </div>
+                                    <div className={`max-w-[80%] px-4 py-2 rounded-lg ${m.role === 'user'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                                        }`}>
+                                        <p className="whitespace-pre-wrap">{m.content}</p>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div className="text-center py-8">
+                                <p className="text-sm text-slate-400">
+                                    — Koniec transkryptu —
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
