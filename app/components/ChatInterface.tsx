@@ -3,17 +3,21 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef, useState } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ChatPage() {
     const { messages, sendMessage, status } = useChat({
         transport: new DefaultChatTransport({ api: '/api/chat' }),
     });
+
     const isLoading = status === 'submitted' || status === 'streaming';
     const [input, setInput] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isInterviewFinished, setIsInterviewFinished] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+    const [hasCredits, setHasCredits] = useState<boolean | null>(null);
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -25,9 +29,48 @@ export default function ChatPage() {
         }
     }, [input]);
 
+    const getMessageText = (m: any) => {
+        if (m.parts && Array.isArray(m.parts)) {
+            return m.parts
+                .filter((part: any) => part.type === 'text')
+                .map((part: any) => part.text)
+                .join('');
+        }
+        return m.text || m.content || '';
+    };
+
+    useEffect(() => {
+        const lastMessage = messages[messages.length - 1];
+
+        if (lastMessage && lastMessage.role === 'assistant') {
+            const text = getMessageText(lastMessage);
+            if (text.includes('[ZATRUDNIONY]') || text.includes('[ODRZUCONY]')) {
+                setIsInterviewFinished(true);
+            }
+        }
+    }, [messages]);
+
+    useEffect(() => {
+        const checkCredits = async () => {
+            try {
+                const response = await fetch('/api/user/credits');
+                if (response.ok) {
+                    const data = await response.json();
+                    setHasCredits(data.credits > 0);
+                } else {
+                    setHasCredits(false);
+                }
+            } catch (error) {
+                console.error("Błąd sprawdzania kredytów:", error);
+                setHasCredits(false);
+            }
+        };
+
+        checkCredits();
+    }, []);
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || isLoading) return;
+        if (!input.trim() || isLoading || isInterviewFinished) return;
         sendMessage({ text: input });
         setInput('');
         if (textareaRef.current) {
@@ -41,16 +84,57 @@ export default function ChatPage() {
             handleSubmit(e);
         }
     };
-    const getMessageText = (m: any) => {
-        if (m.parts && Array.isArray(m.parts)) {
-            return m.parts
-                .filter((part: any) => part.type === 'text')
-                .map((part: any) => part.text)
-                .join('');
-        }
-        return m.text || m.content || '';
-    };
+    const saveInterview = async () => {
+        setIsSaving(true);
+        try {
+            const response = await fetch('/api/interview/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messages,
+                    jobTitle: "Rozmowa - AI Mock Interview"
+                })
+            });
 
+            if (!response.ok) {
+                throw new Error('Błąd zapisu');
+            }
+            alert("Zapisano!");
+            window.location.href = '/dashboard';
+
+        } catch (error) {
+            console.error(error);
+            alert("Coś poszło nie tak przy zapisie.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+    if (hasCredits === null) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-white dark:bg-slate-950">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+            </div>
+        );
+    }
+
+    if (hasCredits === false) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+                <div className="max-w-md text-center space-y-6 bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
+                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
+                        <AlertCircle size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Brak dostępnych wywiadów</h2>
+                    <p className="text-slate-600 dark:text-slate-400">
+                        Wykorzystałeś już wszystkie swoje darmowe kredyty na rozmowy rekrutacyjne. Przejdź do panelu, aby sprawdzić swoje dotychczasowe wyniki.
+                    </p>
+                    <Link href="/dashboard" className="inline-block w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
+                        Wróć do Panelu
+                    </Link>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="flex flex-col h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
             <header className="border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 bg-white dark:bg-slate-950 z-10">
@@ -91,6 +175,29 @@ export default function ChatPage() {
                             </div>
                         </div>
                     )}
+
+                    {isInterviewFinished && (
+                        <div className="mt-8 p-6 bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-800 rounded-2xl text-center">
+                            <h3 className="text-xl font-bold text-blue-800 dark:text-blue-400 mb-2">
+                                Wywiad dobiegł końca
+                            </h3>
+                            <p className="text-slate-600 dark:text-slate-400 mb-6">
+                                Rekruter wydał ostateczny werdykt. Zapisz tę rozmowę w swoim profilu, aby móc ją przeanalizować.
+                            </p>
+                            <button
+                                onClick={saveInterview}
+                                disabled={isSaving}
+                                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+                            >
+                                {isSaving ? (
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Zapisywanie w Supabase...</>
+                                ) : (
+                                    "Zapisz wynik i zakończ (Pobiera 1 kredyt)"
+                                )}
+                            </button>
+                        </div>
+                    )}
+
                     <div ref={messagesEndRef} />
                 </div>
             </div>
@@ -101,16 +208,16 @@ export default function ChatPage() {
                         <textarea
                             ref={textareaRef}
                             rows={1}
-                            className="flex-1 p-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
-                            placeholder="Napisz wiadomość..."
+                            className={`flex-1 p-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 ${isInterviewFinished ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            placeholder={isInterviewFinished ? "Wywiad zakończony." : "Napisz wiadomość..."}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            disabled={isLoading}
+                            disabled={isLoading || isInterviewFinished}
                         />
                         <button
                             type="submit"
-                            disabled={isLoading || !input.trim()}
+                            disabled={isLoading || !input.trim() || isInterviewFinished}
                             className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}

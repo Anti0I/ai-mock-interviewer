@@ -10,7 +10,6 @@ export async function POST(req: Request) {
     if (WEBHOOK_SECRET === undefined) {
         throw new Error('WEBHOOK_SECRET is undefined')
     }
-    // headers
     const headerPayload = await headers()
     const svix_id = headerPayload.get('svix-id')
     const svix_timestamp = headerPayload.get('svix-timestamp')
@@ -22,11 +21,9 @@ export async function POST(req: Request) {
         })
     }
 
-    // body
     const payload = await req.json()
     const body = JSON.stringify(payload)
 
-    // Svix instance
     const wh = new Webhook(WEBHOOK_SECRET)
 
     let evt: WebhookEvent
@@ -44,12 +41,10 @@ export async function POST(req: Request) {
         })
     }
 
-    // Handle the webhook event here
     const { id } = evt.data
     const eventType = evt.type
 
     if (eventType === 'user.created') {
-        // Example: save the user to the database once you define the User model in Prisma schema
         try {
             await prisma.user.create({
                 data: {
