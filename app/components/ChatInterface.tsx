@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useEffect, useRef, useState } from 'react';
-import { Send, Bot, User, Loader2, AlertCircle } from 'lucide-react';
+import { Send, Bot, User, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ChatPage() {
@@ -139,6 +139,9 @@ export default function ChatPage() {
         <div className="flex flex-col h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
             <header className="border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 bg-white dark:bg-slate-950 z-10">
                 <div className="max-w-3xl mx-auto flex items-center gap-3">
+                    <Link href="/dashboard" className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Wróć do panelu">
+                        <ArrowLeft size={20} />
+                    </Link>
                     <h1 className="font-semibold text-lg">Rozmowa Kwalifikacyjna</h1>
                 </div>
             </header>
