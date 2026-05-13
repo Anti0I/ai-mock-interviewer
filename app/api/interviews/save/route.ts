@@ -10,7 +10,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { interviewId, messages } = body;
+        const { interviewId, messages, isCompleted = true } = body;
 
         if (!interviewId) {
             return new NextResponse("Brak interviewId", { status: 400 });
@@ -29,11 +29,17 @@ export async function POST(req: Request) {
             ? (lastMessage.content || lastMessage.parts?.[0]?.text || "Brak podsumowania")
             : null;
 
+        await prisma.message.deleteMany({
+            where: { interviewId }
+        });
+
+        const newStatus = isCompleted ? "COMPLETED" : "INTERRUPTED";
+
         const updated = await prisma.interview.update({
             where: { id: interviewId },
             data: {
-                status: "COMPLETED",
-                feedback: feedbackText,
+                status: newStatus,
+                feedback: isCompleted ? feedbackText : "Wywiad przerwany",
                 messages: {
                     create: messages.map((m: any) => ({
                         role: m.role === 'user' ? 'user' : 'ai',
