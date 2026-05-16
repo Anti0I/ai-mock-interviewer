@@ -18,7 +18,6 @@ Automated SaaS application that provides interactive interview sessions. It mana
 ![Clerk](https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
-![Vercel AI SDK](https://img.shields.io/badge/Vercel_AI_SDK-000000?style=for-the-badge&logo=vercel&logoColor=white)
 ![Gemini AI](https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
 
 ---
@@ -26,7 +25,6 @@ Automated SaaS application that provides interactive interview sessions. It mana
 ## AI Engine
 
 **Model:** `gemini-2.5-flash`
-**SDK:** Vercel AI SDK 6
 
 Acts as a professional technical recruiter. It handles real-time text streaming, dynamic context processing, and adapts its questions based on candidate responses. 
 
